@@ -74,16 +74,21 @@ export default class Wp1React extends React.Component<IWp1ReactProps, IControls,
       MarkChangedToDisabled:true
       };
 
-      this.getGrade_Click=this.getGrade_Click.bind(this);
-
       sp.web.currentUser.get().then((user) => {
         this.setState({InstructorName:user.LoginName});
-      });
+        console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>' + this.state.InstructorName);
+        });
+
+      
+
+      this.getGrade_Click=this.getGrade_Click.bind(this);
 
       this._renderCoursesAsync();
       this._renderTermsAsync();      
 
     }
+
+
   
     //#region Render Banner Courses
     private _renderCoursesAsync()
@@ -166,7 +171,10 @@ export default class Wp1React extends React.Component<IWp1ReactProps, IControls,
     this.setState({MarkChangedToDisabled:false});
 
           
-
+    sp.web.currentUser.get().then((user) => {
+      this.setState({InstructorName:user.LoginName});
+      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>' + this.state.InstructorName);
+      });
           
 
     //this.context.aadHttpClientFactory
