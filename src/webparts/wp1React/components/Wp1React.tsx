@@ -17,6 +17,7 @@ import MockupTermsHttpClient from './MockupTerms';
 export interface IControls
 {
   InstructorName:string;
+  StudentNumber:string;
   StudentName:string;
   StudentNameDisabled:boolean;
   ProgramName:string;
@@ -51,6 +52,14 @@ export interface ITerm {
   Id:string;
 }
 
+export interface IGrade {
+  courseNumber: string; 
+  crn: string;
+  courseTitle: string;
+}
+
+
+
 //#endregion
 
 export default class Wp1React extends React.Component<IWp1ReactProps, IControls, {}> {
@@ -59,6 +68,7 @@ export default class Wp1React extends React.Component<IWp1ReactProps, IControls,
     super(props);
     this.state={
       InstructorName:"CURRENT USER - INSTRUCTOR",
+      StudentNumber:"020053192",
       StudentName:"N/A",
       StudentNameDisabled:true,
       ProgramName:"N/A",
@@ -83,7 +93,7 @@ export default class Wp1React extends React.Component<IWp1ReactProps, IControls,
 
       this.getGrade_Click=this.getGrade_Click.bind(this);
 
-      this._renderCoursesAsync();
+      //this._renderCoursesAsync();
       this._renderTermsAsync();      
 
     }
@@ -154,13 +164,29 @@ export default class Wp1React extends React.Component<IWp1ReactProps, IControls,
 
   private  getGrade_Click(){
 
-    var s = JSON.parse('{"grades": [{"surrogateId": 0, "crn": "string", "subject": "string", "courseNumber": "string", "courseTitle": "string", "grade": "string"}], "lastName": "Rybin", "firstName": "Alex", "middleInitial": "string", "programDescription": "string"}');
+    fetch('https://studentinformationsystemapi-dev.azurewebsites.net/api/GradeChange/LoadGradesDev?studentId='+this.state.StudentNumber+'&termCode=202010&facultyId=Valerie.Barath%40GeorgianCollege.ca')
+    .then(res => res.json())
+    .then((data) => {
+      let s = JSON.parse(JSON.stringify(data));
+      this.setState({StudentName:s.firstName + ' ' + s.lastName});
+      this.setState({ProgramName:s.programDescription});
+
+      let courseList = [];
+      var _grades: IGrade[] = s.grades;
+
+      _grades.forEach((g:IGrade) => {
+        courseList.push({
+          key:g.courseNumber,
+          text: g.crn + '-' + g.courseTitle + '-' + g.courseNumber
+        });
+      });
+
+      this.setState({CourseSelectionList: courseList});
+    })
+    .catch(console.log);
     
-    this.setState({StudentName:s.firstName + ' ' + s.lastName});
     
-    //this.setState({StudentName: 'Alex Rybin'});
-    this.setState({StudentNameDisabled: false});
-    this.setState({ProgramName:'Motorcycling'});
+    this.setState({StudentNameDisabled: false}); 
     this.setState({ProgramNameDisabled: false});
     this.setState({CourseTitle:'Fast riding'});
     this.setState({CourseTitleDisabled: false});
@@ -175,7 +201,10 @@ export default class Wp1React extends React.Component<IWp1ReactProps, IControls,
       this.setState({InstructorName:user.LoginName});
       console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>' + this.state.InstructorName);
       });
-          
+      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>' + sp.web.currentUser.toString());   
+
+
+
 
     //this.context.aadHttpClientFactory
     //  .getClient('https://contoso.azurewebsites.net')
@@ -204,11 +233,7 @@ export default class Wp1React extends React.Component<IWp1ReactProps, IControls,
       { key: '2', text: 'Section 2' },
       { key: '3', text: 'Section 3' }
     ];
-    const optionsCourseSection: IDropdownOption[] = [
-      { key: '1', text: 'CRN-COURSE TITLE-COURSE# 1' },
-      { key: '2', text: 'CRN-COURSE TITLE-COURSE# 2' },
-      { key: '3', text: 'CRN-COURSE TITLE-COURSE# 3' }
-    ];
+
     const dropdownStyles: Partial<IDropdownStyles> = {
       dropdown: { }
     };   
@@ -222,15 +247,9 @@ export default class Wp1React extends React.Component<IWp1ReactProps, IControls,
               <Label htmlFor={'#fromUser'}>FROM:</Label>
               <TextField id="fromUser" value={this.state.InstructorName} readOnly/>
                <div>
-               <Dropdown placeholder="Select an option" 
-               label="COURSE:" 
-               options={this.state.CourseSelectionList} 
-               styles={dropdownStyles}/>
-               </div>
-               <div>
                  <div className={styles.leftColumn}>
                   <Label htmlFor={'#studentNumber'}>STUDENT NUMBER</Label>
-                  <TextField id="studentNumber" maxLength={9}/>
+                  <TextField id="studentNumber" maxLength={9} value={this.state.StudentNumber}/>
                  </div>
                  <div className={styles.rightColumn}>
                  <Label htmlFor={'#academicTerm'}>TERM:</Label>
@@ -246,17 +265,27 @@ export default class Wp1React extends React.Component<IWp1ReactProps, IControls,
                <div className={styles.fieldGroup}>
                <TextField label="STUDENT NAME"  value={this.state.StudentName} readOnly disabled={this.state.StudentNameDisabled} />
                <TextField label="PROGRAMM:"  value={this.state.ProgramName}  readOnly disabled={this.state.ProgramNameDisabled}/>
-  
-              
-               <Dropdown placeholder="Select an option" 
-               label="SECTION:" 
-               options={optionsSectionSelection} 
-               styles={dropdownStyles} disabled={this.state.SectionDisabled}/>
+               <div>
+                <Dropdown placeholder="Select an option" 
+                label="COURSE:" 
+                options={this.state.CourseSelectionList} 
+                styles={dropdownStyles}/>
+               </div>
+               <div>
+                <Dropdown placeholder="Select an option" 
+                label="SECTION:" 
+                options={optionsSectionSelection} 
+                styles={dropdownStyles} disabled={this.state.SectionDisabled}/>
+               </div>
                <div>
                  <div className={styles.leftColumn}><TextField label="MARK CHANGED FROM:" readOnly disabled={this.state.MarkChangedFromDisabled}/></div>
                  <div className={styles.rightColumn}><TextField label="MARK CHANGED TO:" disabled={this.state.MarkChangedToDisabled}/></div>
                </div>
                <TextField label="RATIONALE" multiline rows={6} />
+              </div>
+              <div>
+               
+               
                <div>
                  <div className={styles.leftColumn}><DefaultButton text="Cancel" allowDisabledFocus  /></div>
                  <div className={styles.rightColumn}><PrimaryButton text="Submit" allowDisabledFocus  /></div>
